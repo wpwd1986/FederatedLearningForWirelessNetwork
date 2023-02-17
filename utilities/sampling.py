@@ -18,8 +18,8 @@ def mnist_iid(dataset, num_users):
     num_items = 150
     dict_users, all_idxs = {}, [i for i in range(len(dataset))]
     for i in range(num_users):
-        dict_users[i] = set(np.random.choice(all_idxs, num_items, replace=False)) # 为该用户随机挑选num_items张图片
-        all_idxs = list(set(all_idxs) - dict_users[i]) # 剔除已选
+        dict_users[i] = set(np.random.choice(all_idxs, num_items, replace=False)) # Randomly pick num_items pictures for this user
+        all_idxs = list(set(all_idxs) - dict_users[i]) # Remove selected
     return dict_users
 
 #%%
@@ -37,15 +37,15 @@ def mnist_noniid(dataset, num_users):
     idxs = np.arange(num_shards*num_imgs) # 0-59999
     labels = dataset.train_labels.numpy()
     # sort labels
-    idxs_labels = np.vstack((idxs, labels)) # 垂直堆叠新数组
-    idxs_labels = idxs_labels[:,idxs_labels[1,:].argsort()] # 排序并提取索引
+    idxs_labels = np.vstack((idxs, labels)) # Stack new arrays vertically
+    idxs_labels = idxs_labels[:,idxs_labels[1,:].argsort()] # Sort and extract index
     idxs = idxs_labels[0,:]
     # divide and assign
     for i in range(num_users):
-        rand_set = set(np.random.choice(idx_shard, user_shards, replace=False)) # 每个用户选择5*30=150
+        rand_set = set(np.random.choice(idx_shard, user_shards, replace=False)) # Each user chooses 5*30=150
         #shardnum = random.randint(1,3)
         #rand_set = set(np.random.choice(idx_shard, shardnum, replace=False))
-        idx_shard = list(set(idx_shard) - rand_set) # 剔除已选
+        idx_shard = list(set(idx_shard) - rand_set) # Remove selected
         for rand in rand_set:
             dict_users[i] = np.concatenate((dict_users[i], idxs[rand*num_imgs:(rand+1)*num_imgs]), axis=0)
     return dict_users
@@ -61,7 +61,7 @@ def cifar_iid(dataset, num_users):
     num_items = 150
     dict_users, all_idxs = {}, [i for i in range(len(dataset))]
     for i in range(num_users):
-        dict_users[i] = set(np.random.choice(all_idxs, num_items, replace=False)) # 为该用户随机挑选num_items张图片
+        dict_users[i] = set(np.random.choice(all_idxs, num_items, replace=False)) # Randomly pick num_items pictures for this user
         all_idxs = list(set(all_idxs) - dict_users[i])
     return dict_users
 
@@ -83,15 +83,15 @@ def cifar_noniid(dataset, num_users):
         list_labels = np.append(list_labels,labels)
     list_labels = list_labels.astype(int)
     # sort labels
-    idxs_labels = np.vstack((idxs, list_labels)) # 垂直堆叠新数组
-    idxs_labels = idxs_labels[:,idxs_labels[1,:].argsort()] # 排序并提取索引
+    idxs_labels = np.vstack((idxs, list_labels)) # Stack new arrays vertically
+    idxs_labels = idxs_labels[:,idxs_labels[1,:].argsort()] # Sort and extract index
     idxs = idxs_labels[0,:]
     # divide and assign
     for i in range(num_users):
-        rand_set = set(np.random.choice(idx_shard, user_shards, replace=False)) # 每个用户选择5*30=150
+        rand_set = set(np.random.choice(idx_shard, user_shards, replace=False)) # Each user chooses 5*30=150
         #shardnum = random.randint(1,3)
         #rand_set = set(np.random.choice(idx_shard, shardnum, replace=False))
-        idx_shard = list(set(idx_shard) - rand_set) # 剔除已选
+        idx_shard = list(set(idx_shard) - rand_set) # Remove selected
         for rand in rand_set:
             dict_users[i] = np.concatenate((dict_users[i], idxs[rand*num_imgs:(rand+1)*num_imgs]), axis=0)
     return dict_users
