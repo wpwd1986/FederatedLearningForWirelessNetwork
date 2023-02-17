@@ -146,7 +146,7 @@ if __name__ == '__main__':
 
 #%% Measure user value
             if args.cond == 1:
-                col = np.arange(iter, 30*100+iter, 100) # 需要在输入文件中修改
+                col = np.arange(iter, 30*100+iter, 100) # Needs to be modified in the input file
                 cfr = pd.read_csv(open(args.snrsingle), usecols=col, engine='python', header=None).values
                 cfr = cfr.T
                 pool_user = list(range(args.num_users))
@@ -158,7 +158,7 @@ if __name__ == '__main__':
                 factor_chan = np.zeros((args.num_users,args.num_chan))
                 factor_grad = [0]*args.num_users
                 for i in range(args.num_users):
-                    factor_imp[i] = (user_imp[i] - np.min(user_imp))/(np.max(user_imp) - np.min(user_imp)) # 定义数据价值因子
+                    factor_imp[i] = (user_imp[i] - np.min(user_imp))/(np.max(user_imp) - np.min(user_imp)) # Define Data Value Factors
                     factor_grad[i] = np.linalg.norm(grad_local[i]-grad_globa[iter])
                     for j in range(args.num_chan):
                         factor_chan[i,j] = (cfr[i,j] - np.min(cfr))/(np.max(cfr) - np.min(cfr))
@@ -184,41 +184,41 @@ if __name__ == '__main__':
                 while len(pool_chan) > 0:
                     sel_user = None
                     sel_chan = None
-                    # 【随机选择】 在池中随机选择用户与信道
+                    # Random selection 
                     if args.method == 1:
                         sel_user = np.random.choice(pool_user)
                         sel_chan = np.random.choice(pool_chan)
                         user_method = 'rand'
-                    # 【信道质量优先】 选择响应矩阵中最大值对应的用户与信道
+                    # Channel quality only
                     elif args.method == 2:
                         sel_user, sel_chan = np.where(cfr == np.max(cfr))
                         sel_user = int(sel_user[0])
                         sel_chan = int(sel_chan[0])
                         user_method = 'chan'
-                    # 【梯度差优先】 选择本地梯度与全局梯度差最小的用户
+                    # Gradient entropy * loss
                     elif args.method == 4:
                         sel_user = np.argmin(factor_grad)
                         sel_chan = np.random.choice(pool_chan)
                         factor_grad[sel_user] = 1
                         user_method = 'grad'
-                    # 【数据价值优先】 选择数据价值最高的用户及其信道
+                    #  Category difference
                     elif args.method==3 or args.method==6 or args.method==7 or args.method==8 or args.method==9 or args.method==0:
-                        # 只考虑数据价值
+                        # Consider data quality only
                         if args.bal == 0:
-                            sel_user = np.argmax(factor_imp) # 选取价值最大者
-                            #sel_user = np.argmin(factor_imp) #选取价值最小者
-                            #sel_chan = np.argmax(cfr[sel_user]) # 最优信道
-                            sel_chan = np.random.choice(pool_chan) # 随机信道
+                            sel_user = np.argmax(factor_imp) # Select the users with highest quality
+                            #sel_user = np.argmin(factor_imp) #Select the users with lowest quality
+                            #sel_chan = np.argmax(cfr[sel_user]) # Optimal channel assignment
+                            sel_chan = np.random.choice(pool_chan) # Randomly channel assignment
                             factor_imp[sel_user] = -1
                             #user_method = 'imp'
-                        # 平衡价值 选择平衡响应矩阵中最大值对应的用户与信道
+                        # Balance value: Select the user and channel corresponding to the maximum value in the balance response matrix
                         elif args.bal == 1:
                             valmx_bal = np.zeros((args.num_users,args.num_chan))
                             for i in range(args.num_users):
                                 for j in range(args.num_chan):
-                                    #前置预设权重
+                                    #Pre-set weight
                                     #valmx_bal[i,j] = (args.rho**(-iter)/args.beta)*factor_chan[i,j] + (1 - (args.rho**(-iter)/args.beta))*factor_imp[i]
-                                    #后置预设权重
+                                    #Post preset weight
                                     valmx_bal[i,j] = ((args.rho**(-iter))*(1-args.beta)+args.beta)*factor_chan[i,j]+(1-((args.rho**(-iter))*(1-args.beta)+args.beta))*factor_imp[i]
                             cfr_check = np.zeros((args.num_users,args.num_chan))
                             for i in range(args.num_users):
@@ -243,7 +243,7 @@ if __name__ == '__main__':
                     cfr[sel_user] = [-100]*len(cfr[sel_user])
                 #print(idx_chanres)
 
-#%% 子信道用量
+#%% Subchannel assignment
                 idx_select = []
                 for i in range(len(idx_chanres)):
                     print('Channel {:1d}, User {:1d}'.format(i, idx_chanres[i]))
@@ -274,7 +274,7 @@ if __name__ == '__main__':
                 print(idx_chanres)
                 #print(idx_select)
 
-#%% 更新全局模型
+#%% Update global model
                 if len(idx_select) != 0:
                     wt_locals_sel = [0]*len(idx_select)
                     loss_locals_sel = [0]*len(idx_select)
@@ -315,7 +315,7 @@ if __name__ == '__main__':
             else:
                 grad_globa[iter+1] = grad_globa[iter]
 
-#%% 测试模型
+#%% Model testing
             net_glob.eval() # Sets the module in evaluation mode
             acc_train[iter], loss_train_fin[iter] = test_img(net_glob, dataset_train, args)
             acc_test[iter], loss_test_fin[iter] = test_img(net_glob, dataset_test, args)
@@ -329,7 +329,7 @@ if __name__ == '__main__':
                 acc_test_scale.append(acc_test_sum/scale)
                 acc_test_sum = 0
 
-#%% 结果绘图
+#%% Plot results
         #user_weight = []
         idx_chanres = []
         plt.figure()
