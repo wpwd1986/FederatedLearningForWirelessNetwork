@@ -17,22 +17,22 @@ import scipy.stats
 import scipy.io as scio
 
 # From other proejct files
-from utils.sampling import mnist_iid, mnist_noniid, cifar_iid, cifar_noniid
-from utils.options import args_parser
+from utilities.sampling import mnist_iid, mnist_noniid, cifar_iid, cifar_noniid
+from utilities.options import args_parser
 from models.Update import LocalUpdate
 from models.Nets import MLP, CNNMnist, CNNCifar
 from models.Fed import FedAvg
 from models.test import test_img
 
-#%% 数据集初始化
+#%% Data set initialization
 if __name__ == '__main__':
     args = args_parser()
     args.device = torch.device('cuda:{}'.format(args.gpu) if torch.cuda.is_available() and args.gpu != -1 else 'cpu')
-    # 读取保存的用户目录
+    # read saved data directory
     if args.setmode == 'load':
         if args.dataset == 'mnist':
             trans_mnist = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
-            dataset_train = datasets.MNIST('./data/mnist/', train=True, download=True, transform=trans_mnist) # 加载训练集
+            dataset_train = datasets.MNIST('./data/mnist/', train=True, download=True, transform=trans_mnist) # load traning data
             dataset_test = datasets.MNIST('./data/mnist/', train=False, download=True, transform=trans_mnist)
             dict_users = np.load(args.dictfile, allow_pickle='TRUE').item()
         elif args.dataset == 'cifar':
@@ -42,14 +42,14 @@ if __name__ == '__main__':
             dict_users = np.load(args.dictfile, allow_pickle='TRUE').item()
         else:
             exit('Error: unrecognized dataset')
-    # 创建新用户目录
+    # create new directory
     elif args.setmode == 'create':
         if args.dataset == 'mnist':
-            trans_mnist = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))]) # 像素转换并用给定均值和方差规范化
-            dataset_train = datasets.MNIST('./data/mnist/', train=True, download=True, transform=trans_mnist) # 加载训练集
+            trans_mnist = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))]) # Convert pixels and normalize with given mean and variance
+            dataset_train = datasets.MNIST('./data/mnist/', train=True, download=True, transform=trans_mnist) # load traning data
             dataset_test = datasets.MNIST('./data/mnist/', train=False, download=True, transform=trans_mnist)
             if args.iid:
-                dict_users = mnist_iid(dataset_train, args.num_users) # 将数据分配给用户
+                dict_users = mnist_iid(dataset_train, args.num_users) # Assign data to users
                 np.save('dictmn_iid_1000_new.npy', dict_users)
             else:
                 dict_users = mnist_noniid(dataset_train, args.num_users)
@@ -70,14 +70,14 @@ if __name__ == '__main__':
     else:
         exit('Error: unrecognized mode')
     img_size = dataset_train[0][0].shape # [1, 28, 28]
-    # 分析用户类别
+    # Analyze user categories
     usercla = 3
     classlist = [[0 for col in range(usercla)] for row in range(args.num_users)]
     for i in range(args.num_users):
         for j in range(usercla):
             classlist[i][j] = dataset_train[dict_users[i][j*30]][1]
 
-#%% 加载模型
+#%% Load model
     for iter_sim in range(args.sim):
         # build model
         if args.model == 'cnn' and args.dataset == 'cifar':
@@ -96,7 +96,7 @@ if __name__ == '__main__':
         # copy weights
         wt_glob = net_glob.state_dict() # Returns a dictionary containing a whole state of the module
 
-#%% 环境参数初始化
+#%% Environment parameter initialization
         loss_train = []
         acc_train = [0]*args.epochs
         acc_test = [0]*args.epochs
@@ -119,7 +119,7 @@ if __name__ == '__main__':
         idx_chanres = [None]*args.num_chan
         size_remain = [0]*args.num_chan
 
-#%% 模型分发训练
+#%% Model distribution training
         print('Total Rounds {:2d}'.format(args.epochs))
         print('Total Users {:3d}'.format(args.num_users))
         print('Total Bandwidth {:2f} MHz'.format(args.totband*args.num_chan/1000000))
@@ -144,7 +144,7 @@ if __name__ == '__main__':
                 loss_locals.append(copy.deepcopy(loss)) # Loss
             print('Done')
 
-#%% 衡量用户价值
+#%% Measure user value
             if args.cond == 1:
                 col = np.arange(iter, 30*100+iter, 100) # 需要在输入文件中修改
                 cfr = pd.read_csv(open(args.snrsingle), usecols=col, engine='python', header=None).values
@@ -163,7 +163,7 @@ if __name__ == '__main__':
                     for j in range(args.num_chan):
                         factor_chan[i,j] = (cfr[i,j] - np.min(cfr))/(np.max(cfr) - np.min(cfr))
 
-#%% 子信道分配
+#%% Subchannel allocation
                 for i in range(args.num_chan):
                     if idx_chanres[pool_chan[i]] is None:
                         continue
